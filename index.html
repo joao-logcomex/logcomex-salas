@@ -731,7 +731,7 @@ document.getElementById('btn-add-guest').addEventListener('click',()=>addGuestFi
 // ── CONFIG ──
 let cfg={
   thisRoom:'',pin:DEFAULT_PIN,autoCancel:false,
-  vipEmails:['cruz@logcomex.com','helmuth@logcomex.com','carlos@logcomex.com','michela.cantarini@logcomex.com','allan.schmitt@logcomex.com','castelli@logcomex.com','daniel.alle@logcomex.com','adriano.martins@logcomex.com','ramon.paludo@logcomex.com','evelyn@logcomex.com','aline.lenhart@logcomex.com','milena@logcomex.com','rafael.mercatelli@logcomex.com','monica.gabriella@logcomex.com','marcelo.neves@logcomex.com','leonardo.prado@logcomex.com','patricia.rifiski@logcomex.com','nayana.rogal@logcomex.com','amadeo@logcomex.com','raphael.batta@logcomex.com'],
+  vipEmails:[],// v26: lista VIP movida para o backend (Code.gs) — nao exposta no frontend
   rooms:[
     {name:'1. PHP',capacity:5,email:'c_1884rp7puo7gejdji3bfro291a05i@resource.calendar.google.com',floor:'Andar 1'},
     {name:'2. Javascript',capacity:5,email:'c_18846snhor0rghuijj2jq394chmhm@resource.calendar.google.com',floor:'Andar 1'},
@@ -830,8 +830,7 @@ function startToleranceTimer(){
       const now=new Date();
       const cur=state.events.find(e=>{const s=new Date(e.start.dateTime),en=new Date(e.end.dateTime);return s<=now&&en>now;});
       if(cur){
-        const respEmail=(responsible||'').toLowerCase();if(cfg.vipEmails.some(v=>v.toLowerCase()===respEmail)){return;}const p=new URLSearchParams({action:'cancel',roomEmail:cfg.thisRoom,eventStart:cur.start.dateTime,email:responsible||'',room:roomName||'Sala'});
-        fetch(`${BACKEND_URL}?${p.toString()}`).catch(()=>{});
+        const respEmail=(responsible||'').toLowerCase();if(cfg.vipEmails.some(v=>v.toLowerCase()===respEmail)){return;}fetch(BACKEND_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'cancel',roomEmail:cfg.thisRoom,eventStart:cur.start.dateTime,email:responsible||'',room:roomName||'Sala'})}).catch(()=>{});
         // Registra no histórico local como sem check-in
         const hist=JSON.parse(localStorage.getItem('lcx_hist')||'[]');
         hist.unshift({email:responsible||'—',room:roomName||'Sala',checkin:false,ts:new Date().toISOString()});
@@ -1113,8 +1112,7 @@ document.getElementById('btn-confirm-booking').addEventListener('click',async()=
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';
   const start=new Date(`${date}T${time}:00`),end=new Date(start.getTime()+dur*60000);
   try{
-    const params=new URLSearchParams({action:'create',roomEmail:room.email,title,start:start.toISOString(),end:end.toISOString(),attendees:[email,...guests].join(',')});
-    const resp=await fetch(`${BACKEND_URL}?${params.toString()}`);
+    const resp=await fetch(BACKEND_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',roomEmail:room.email,title,start:start.toISOString(),end:end.toISOString(),attendees:[email,...guests].join(',')})});
     const data=await resp.json();
     if(data.error)throw new Error(data.error);
     al.innerHTML='<div class="alert success">✅ Sala agendada! Convite enviado por e-mail.</div>';
