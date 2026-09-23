@@ -693,10 +693,10 @@ document.getElementById('wifi-select').addEventListener('change',function(){
 window.addEventListener('load',()=>renderWifiQR(WIFI_NETS[0].ssid,WIFI_NETS[0].pass));
 
 // ── COLABORADORES AUTOCOMPLETE ──
-let _colaboradores=[],_colaboradoresLoaded=false;
-async function loadColaboradores(){
-  if(_colaboradoresLoaded)return;
-  try{const r=await fetch(`${BACKEND_URL}?action=colaboradores`);const d=await r.json();if(d.colaboradores&&d.colaboradores.length){_colaboradores=d.colaboradores;_colaboradoresLoaded=true;}}catch(e){}
+// v25: busca no servidor com filtro 'q' (min 2 chars, max 10 resultados)
+// Nao carrega mais o diretorio inteiro na abertura do modal
+async function buscarColaboradores(q){
+  try{const r=await fetch(`${BACKEND_URL}?action=colaboradores&q=${encodeURIComponent(q)}`);const d=await r.json();return d.colaboradores||[];}catch(e){return [];}
 }
 function addGuestField(val){
   const wrap=document.getElementById('guests-list'),row=document.createElement('div');
@@ -707,10 +707,10 @@ function addGuestField(val){
   input.onfocus=()=>input.style.borderColor='var(--orange)';
   input.onblur=()=>{setTimeout(()=>hideSuggestions(dd),200);input.style.borderColor='var(--purple-border)';};
   const dd=document.createElement('div');dd.className='ac-dropdown';
-  input.addEventListener('input',()=>{
+  input.addEventListener('input',async()=>{
     const q=input.value.trim().toLowerCase();
     if(q.length<2){hideSuggestions(dd);return;}
-    const matches=_colaboradores.filter(c=>c.nome.toLowerCase().includes(q)||c.email.toLowerCase().includes(q)).slice(0,8);
+    const matches=await buscarColaboradores(q);
     if(!matches.length){hideSuggestions(dd);return;}
     dd.innerHTML=matches.map(c=>`<div class="ac-item" data-email="${c.email}"><span class="ac-nome">${c.nome}</span><span class="ac-email">${c.email}</span></div>`).join('');
     dd.querySelectorAll('.ac-item').forEach(item=>{item.addEventListener('mousedown',()=>{input.value=item.dataset.email;hideSuggestions(dd);});});
@@ -1080,7 +1080,7 @@ function populateBkTime(durMin,presetTime){
 document.getElementById('bk-duration').addEventListener('change',function(){populateBkTime(parseInt(this.value),null);});
 
 function openBooking(room){
-  state.bookingTarget=room;loadColaboradores();
+  state.bookingTarget=room;// loadColaboradores removido v25
   const t=new Date().toISOString().split('T')[0];
   const dur=room.presetDur||parseInt(document.getElementById('bk-duration').value)||60;
   let eventsForRoom=state.events;
