@@ -1112,11 +1112,7 @@ async function loadData() {
   document.getElementById('dashboard').style.display = 'none';
   try {
     const senhaRel = localStorage.getItem('rel_senha') || '';
-    const r = await fetch(BACKEND_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'relatorio', senha: senhaRel })
-    });
+    const r = await fetch(`${BACKEND_URL}?action=relatorio&senha=${encodeURIComponent(senhaRel)}`);
     const d = await r.json();
     // v26b: backend valida senha — pede senha se nao autorizado
     if (d.error === 'nao autorizado') {
