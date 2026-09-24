@@ -1114,7 +1114,7 @@ async function loadData() {
     const senhaRel = localStorage.getItem('rel_senha') || '';
     const r = await fetch(`${BACKEND_URL}?action=relatorio&senha=${encodeURIComponent(senhaRel)}`);
     const d = await r.json();
-    // v26c: backend valida senha via GET query string — pede senha se nao autorizado
+    // v26c: backend valida senha via GET query string — deploy forcado — pede senha se nao autorizado
     if (d.error === 'nao autorizado') {
       localStorage.removeItem('rel_senha');
       pedirSenhaRelatorio();
